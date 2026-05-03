@@ -6,8 +6,13 @@
   </div>
   <div class="comment-body rich-body">{{ comment.rendered_body_html }}</div>
   <div class="post-actions-row compact">
+    {% if auth_user %}
     <button class="reaction-button" data-target-id="{{ comment.id }}" data-target-type="comment" data-vote-type="like">▲ <span class="score-label">{{ comment.score }}</span></button>
     <button class="reaction-button secondary" data-target-id="{{ comment.id }}" data-target-type="comment" data-vote-type="dislike">▼</button>
+    {% else %}
+    <span class="reaction-button no-pointer">▲ {{ comment.score }}</span>
+    <a class="ghost-button" href="{{ url_for('auth.login') }}">Log in to vote</a>
+    {% endif %}
     {% if comment.can_delete %}
     <form method="post" action="{{ url_for('community.delete_comment', comment_id=comment.id) }}" onsubmit="return confirm('Delete this comment?');">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
@@ -15,21 +20,39 @@
     </form>
     {% endif %}
   </div>
+  {% if auth_user %}
   <form method="post" action="{{ url_for('community.add_comment', post_id=post_id) }}" enctype="multipart/form-data" class="reply-form" data-rich-composer="1">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <input type="hidden" name="parent_comment_id" value="{{ comment.id }}">
     <input type="file" name="images" accept="image/png,image/jpeg,image/webp,image/gif" multiple class="visually-hidden" tabindex="-1" aria-hidden="true">
     <div class="composer-toolbar" data-composer-toolbar>
-      <button type="button" class="ghost-button" data-format="b">B</button>
-      <button type="button" class="ghost-button" data-format="i">I</button>
-      <button type="button" class="ghost-button" data-format="u">U</button>
-      <button type="button" class="ghost-button" data-format="size">Size</button>
-      <button type="button" class="ghost-button" data-format="link">Link</button>
+      <button type="button" class="ghost-button" data-format="b" title="Bold">B</button>
+      <button type="button" class="ghost-button" data-format="i" title="Italic">I</button>
+      <button type="button" class="ghost-button" data-format="u" title="Underline">U</button>
+      <button type="button" class="ghost-button" data-format="s" title="Strikethrough">S</button>
+      <button type="button" class="ghost-button" data-format="link" title="Insert link">&#128279;</button>
+      <button type="button" class="ghost-button" data-format="clear" title="Clear formatting">Tx</button>
+      <div class="composer-toolbar-separator" aria-hidden="true"></div>
+      <select class="composer-toolbar-select" data-format-font aria-label="Font family">
+        <option value="">Font</option>
+        <option value="IBM Plex Sans">IBM Plex Sans</option>
+        <option value="Space Grotesk">Space Grotesk</option>
+        <option value="Merriweather">Merriweather</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Courier New">Courier New</option>
+      </select>
+      <label class="composer-color-picker" title="Text color">
+        <span class="visually-hidden">Text color</span>
+        <input type="color" data-format-color value="#ecf4ff" aria-label="Text color">
+      </label>
     </div>
     <div class="rich-editor" data-rich-editor contenteditable="true" data-editor-placeholder="Reply to this comment"></div>
     <textarea name="body" rows="2" class="visually-hidden" tabindex="-1" aria-hidden="true"></textarea>
     <button type="submit" class="ghost-button">Reply</button>
   </form>
+  {% else %}
+  <p class="helper-note"><a href="{{ url_for('auth.login') }}">Log in</a> to reply.</p>
+  {% endif %}
   {% if comment.children %}
   <div class="comment-children">
     {% for child in comment.children %}
@@ -43,6 +66,23 @@
 {% extends "base.html" %}
 
 {% block title %}{{ post.title }} | Hockey Community{% endblock %}
+
+{% block seo_meta %}
+{% set _desc = post.body_preview | default('') %}
+{% set _desc = _desc if _desc else 'Read and discuss this post on Hockey Community.' %}
+<meta name="description" content="{{ _desc[:160] }}">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hockey Community">
+<meta property="og:title" content="{{ post.title }}">
+<meta property="og:description" content="{{ _desc[:200] }}">
+<meta property="og:url" content="{{ post.share_url }}">
+<meta property="og:image" content="{{ post.preview_image_url or (request.host_url ~ 'static/Logo.png') }}">
+<meta name="twitter:card" content="{{ 'summary_large_image' if post.preview_image_url else 'summary' }}">
+<meta name="twitter:title" content="{{ post.title }}">
+<meta name="twitter:description" content="{{ _desc[:200] }}">
+<meta name="twitter:image" content="{{ post.preview_image_url or (request.host_url ~ 'static/Logo.png') }}">
+{% endblock %}
 
 {% block content %}
 <article class="panel post-detail-card">
@@ -87,8 +127,13 @@
   {% endif %}
 
   <div class="post-actions-row">
+    {% if auth_user %}
     <button class="reaction-button" data-target-id="{{ post.id }}" data-target-type="post" data-vote-type="like">▲ <span class="score-label">{{ post.score }}</span></button>
     <button class="reaction-button secondary" data-target-id="{{ post.id }}" data-target-type="post" data-vote-type="dislike">▼</button>
+    {% else %}
+    <span class="reaction-button no-pointer">▲ {{ post.score }}</span>
+    <a class="ghost-button" href="{{ url_for('auth.login') }}">Log in to vote</a>
+    {% endif %}
     <button class="ghost-button share-trigger" data-share-url="{{ post.share_url }}" data-share-title="{{ post.title }}" data-post-id="{{ post.id }}">Share</button>
   </div>
 </article>
@@ -100,23 +145,40 @@
       <h2>{{ post.comment_count }} comments</h2>
     </div>
   </div>
+  {% if auth_user %}
   <form method="post" action="{{ url_for('community.add_comment', post_id=post.id) }}" enctype="multipart/form-data" class="composer-form" data-rich-composer="1">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <input type="file" name="images" accept="image/png,image/jpeg,image/webp,image/gif" multiple class="visually-hidden" tabindex="-1" aria-hidden="true">
     <div class="composer-toolbar" data-composer-toolbar>
-      <button type="button" class="ghost-button" data-format="b">Bold</button>
-      <button type="button" class="ghost-button" data-format="i">Italic</button>
-      <button type="button" class="ghost-button" data-format="u">Underline</button>
-      <button type="button" class="ghost-button" data-format="size">Text size</button>
-      <button type="button" class="ghost-button" data-format="link">Hyperlink</button>
+      <button type="button" class="ghost-button" data-format="b" title="Bold">B</button>
+      <button type="button" class="ghost-button" data-format="i" title="Italic">I</button>
+      <button type="button" class="ghost-button" data-format="u" title="Underline">U</button>
+      <button type="button" class="ghost-button" data-format="s" title="Strikethrough">S</button>
+      <button type="button" class="ghost-button" data-format="link" title="Insert link">&#128279;</button>
+      <button type="button" class="ghost-button" data-format="clear" title="Clear formatting">Tx</button>
+      <div class="composer-toolbar-separator" aria-hidden="true"></div>
+      <select class="composer-toolbar-select" data-format-font aria-label="Font family">
+        <option value="">Font</option>
+        <option value="IBM Plex Sans">IBM Plex Sans</option>
+        <option value="Space Grotesk">Space Grotesk</option>
+        <option value="Merriweather">Merriweather</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Courier New">Courier New</option>
+      </select>
+      <label class="composer-color-picker" title="Text color">
+        <span class="visually-hidden">Text color</span>
+        <input type="color" data-format-color value="#ecf4ff" aria-label="Text color">
+      </label>
     </div>
     <div class="rich-editor" data-rich-editor contenteditable="true" data-editor-placeholder="Add to the thread"></div>
     <textarea name="body" rows="4" class="visually-hidden" tabindex="-1" aria-hidden="true"></textarea>
     <div class="composer-actions">
-      <span class="helper-note">Replies stay nested through parent_comment_id in the database.</span>
       <button type="submit" class="primary-button">Comment</button>
     </div>
   </form>
+  {% else %}
+  <p class="helper-note"><a href="{{ url_for('auth.login') }}">Log in</a> to join the discussion.</p>
+  {% endif %}
 </section>
 
 <section class="comments-stack">

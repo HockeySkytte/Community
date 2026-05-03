@@ -4,10 +4,10 @@ from app.routes import auth, community
 from tests.conftest import login_session
 
 
-def test_root_redirects_to_login_when_logged_out(client):
+def test_root_redirects_to_home_when_logged_out(client):
     response = client.get("/")
     assert response.status_code == 302
-    assert "/login" in response.headers["Location"]
+    assert "/home" in response.headers["Location"]
 
 
 def test_home_renders_hubs_and_posts(monkeypatch, client):

@@ -126,17 +126,36 @@ def _build_cumulative_view_points(events: list[dict], range_key: str) -> list[di
     return points
 
 
-def _format_inline_markup(line: str) -> str:
+def _format_inline_markup(line: str, allow_size: bool = True) -> str:
     rendered = str(escape(line))
-    rendered = re.sub(r"\[b\](.*?)\[/b\]", r"<strong>\1</strong>", rendered, flags=re.IGNORECASE)
-    rendered = re.sub(r"\[i\](.*?)\[/i\]", r"<em>\1</em>", rendered, flags=re.IGNORECASE)
-    rendered = re.sub(r"\[u\](.*?)\[/u\]", r"<u>\1</u>", rendered, flags=re.IGNORECASE)
+
+    allowed_fonts = {
+        "ibm plex sans",
+        "space grotesk",
+        "merriweather",
+        "georgia",
+        "courier new",
+    }
 
     def size_replace(match: re.Match[str]) -> str:
         size = max(12, min(48, int(match.group(1))))
         return f'<span style="font-size:{size}px">{match.group(2)}</span>'
 
-    rendered = re.sub(r"\[size=(\d{1,2})\](.*?)\[/size\]", size_replace, rendered, flags=re.IGNORECASE)
+    def color_replace(match: re.Match[str]) -> str:
+        color_value = str(match.group(1) or "").strip()
+        if not re.fullmatch(r"#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?", color_value) and not re.fullmatch(
+            r"[a-zA-Z]{3,20}", color_value
+        ):
+            return match.group(2)
+        return f'<span style="color:{color_value.lower()}">{match.group(2)}</span>'
+
+    def font_replace(match: re.Match[str]) -> str:
+        font_raw = str(match.group(1) or "").strip().replace('"', "")
+        font_value = re.sub(r"[^a-zA-Z0-9\s\-]", "", font_raw)
+        if font_value.strip().lower() not in allowed_fonts:
+            return match.group(2)
+        safe_font = str(escape(font_value.strip()))
+        return f'<span style="font-family:{safe_font}">{match.group(2)}</span>'
 
     def link_replace(match: re.Match[str]) -> str:
         href = str(match.group(1) or "")
@@ -145,11 +164,24 @@ def _format_inline_markup(line: str) -> str:
         safe_href = str(escape(href))
         return f'<a href="{safe_href}" target="_blank" rel="noopener noreferrer">{match.group(2)}</a>'
 
-    rendered = re.sub(r"\[link=(.*?)\](.*?)\[/link\]", link_replace, rendered, flags=re.IGNORECASE)
+    # Allow nested bbcode-like tags by applying replacements until stable.
+    for _ in range(6):
+        before = rendered
+        rendered = re.sub(r"\[b\](.*?)\[/b\]", r"<strong>\1</strong>", rendered, flags=re.IGNORECASE)
+        rendered = re.sub(r"\[i\](.*?)\[/i\]", r"<em>\1</em>", rendered, flags=re.IGNORECASE)
+        rendered = re.sub(r"\[u\](.*?)\[/u\]", r"<u>\1</u>", rendered, flags=re.IGNORECASE)
+        rendered = re.sub(r"\[s\](.*?)\[/s\]", r"<s>\1</s>", rendered, flags=re.IGNORECASE)
+        if allow_size:
+            rendered = re.sub(r"\[size=(\d{1,2})\](.*?)\[/size\]", size_replace, rendered, flags=re.IGNORECASE)
+        rendered = re.sub(r"\[color=(.*?)\](.*?)\[/color\]", color_replace, rendered, flags=re.IGNORECASE)
+        rendered = re.sub(r"\[font=(.*?)\](.*?)\[/font\]", font_replace, rendered, flags=re.IGNORECASE)
+        rendered = re.sub(r"\[link=(.*?)\](.*?)\[/link\]", link_replace, rendered, flags=re.IGNORECASE)
+        if rendered == before:
+            break
     return rendered
 
 
-def _render_rich_text_html(body: str, media_rows: list[dict] | None = None) -> Markup:
+def _render_rich_text_html(body: str, media_rows: list[dict] | None = None, allow_size: bool = True) -> Markup:
     lines = str(body or "").replace("\r\n", "\n").split("\n")
     image_rows = [row for row in (media_rows or []) if str(row.get("media_kind") or "") == "image"]
     image_index = 0
@@ -183,7 +215,7 @@ def _render_rich_text_html(body: str, media_rows: list[dict] | None = None) -> M
             )
             continue
 
-        html_parts.append(f"<p>{_format_inline_markup(line)}</p>")
+        html_parts.append(f"<p>{_format_inline_markup(line, allow_size=allow_size)}</p>")
 
     return Markup("".join(html_parts))
 
@@ -270,11 +302,14 @@ def _parse_video_embed(video_url: str) -> str | None:
 
 
 def _render_post_body_html(body: str, media_rows: list[dict] | None = None) -> Markup:
-    return _render_rich_text_html(body, media_rows)
+    return _render_rich_text_html(body, media_rows, allow_size=True)
 
 
 def _has_inline_image_tokens(body: str) -> bool:
-    return "[[image]]" in str(body or "").lower()
+    text = str(body or "")
+    if "[[image]]" in text.lower():
+        return True
+    return bool(re.search(r"\[image=https?://[^\]]+\]", text, flags=re.IGNORECASE))
 
 
 def _decorate_post(post: dict | None) -> dict | None:
@@ -287,6 +322,10 @@ def _decorate_post(post: dict | None) -> dict | None:
     item["has_inline_images"] = _has_inline_image_tokens(str(item.get("body") or ""))
     item["rendered_body_html"] = _render_post_body_html(str(item.get("body") or ""), item.get("media") or [])
     _body_raw = re.sub(r"\[\[image\]\]", "", str(item.get("body") or ""), flags=re.IGNORECASE)
+    _body_raw = re.sub(r"\[/?(?:b|i|u|s)\]", "", _body_raw, flags=re.IGNORECASE)
+    _body_raw = re.sub(r"\[(?:size|color|font|link)=[^\]]+\]", "", _body_raw, flags=re.IGNORECASE)
+    _body_raw = re.sub(r"\[/(?:size|color|font|link)\]", "", _body_raw, flags=re.IGNORECASE)
+    _body_raw = re.sub(r"\[image=[^\]]+\]", "", _body_raw, flags=re.IGNORECASE)
     item["body_preview"] = _body_raw.strip()[:220]
     return item
 
@@ -322,7 +361,7 @@ def _build_comment_tree(comments: list[dict], auth_user: dict | None = None) -> 
     for row in comments:
         item = dict(row)
         item["children"] = []
-        item["rendered_body_html"] = _render_rich_text_html(str(item.get("body") or ""), None)
+        item["rendered_body_html"] = _render_rich_text_html(str(item.get("body") or ""), None, allow_size=False)
         item["can_delete"] = _can_delete_comment(auth_user, item)
         items[str(item.get("id") or "")] = item
         parent_id = str(item.get("parent_comment_id") or "") or None
@@ -336,13 +375,10 @@ def _build_comment_tree(comments: list[dict], auth_user: dict | None = None) -> 
 
 @community_bp.get("/")
 def index():
-    if get_current_user():
-        return redirect(url_for("community.home"))
-    return redirect(url_for("auth.login"))
+    return redirect(url_for("community.home"))
 
 
 @community_bp.get("/home")
-@login_required
 def home():
     hubs = _decorate_hubs(sb.list_hubs())
     posts = _decorate_posts(sb.list_posts(limit=18, sort="new"))
@@ -351,16 +387,17 @@ def home():
 
 
 @community_bp.get("/hubs/<hub_slug>")
-@login_required
 def hub_feed(hub_slug: str):
+    auth_user = get_current_user() or {}
     sort = str(request.args.get("sort") or "new").strip().lower()
     if sort not in {"new", "top", "my_posts"}:
+        sort = "new"
+    if sort == "my_posts" and not auth_user.get("user_id"):
         sort = "new"
     search_query = str(request.args.get("q") or "").strip() or None
     hub = _decorate_hub(sb.get_hub_by_slug(hub_slug))
     if not hub:
         abort(404)
-    auth_user = get_current_user() or {}
     author_user_id = str(auth_user.get("user_id") or "") if sort == "my_posts" else None
     posts = _decorate_posts(
         sb.list_posts(hub_slug=hub_slug, limit=30, sort=sort, search=search_query, author_user_id=author_user_id)
@@ -448,7 +485,6 @@ def create_post(hub_slug: str):
 
 
 @community_bp.get("/posts/<post_id>")
-@login_required
 def post_detail(post_id: str):
     auth_user = get_current_user() or {}
     post = _decorate_post(sb.get_post(post_id))

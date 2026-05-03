@@ -63,8 +63,13 @@
         <h3><a href="{{ url_for('community.post_detail', post_id=post.id) }}">{{ post.title }}</a></h3>
         {% if post.body_preview %}<p class="post-body-preview">{{ post.body_preview }}</p>{% endif %}
         <div class="post-actions-row">
+          {% if auth_user %}
           <button class="reaction-button" data-target-id="{{ post.id }}" data-target-type="post" data-vote-type="like">▲ <span class="score-label">{{ post.score }}</span></button>
           <button class="reaction-button secondary" data-target-id="{{ post.id }}" data-target-type="post" data-vote-type="dislike">▼</button>
+          {% else %}
+          <span class="reaction-button no-pointer">▲ {{ post.score }}</span>
+          <a class="ghost-button" href="{{ url_for('auth.login') }}">Log in to vote</a>
+          {% endif %}
           <a class="ghost-button" href="{{ url_for('community.post_detail', post_id=post.id) }}#comments">{{ post.comment_count }} comments</a>
           <button class="ghost-button share-trigger" data-share-url="{{ post.share_url }}" data-share-title="{{ post.title }}" data-post-id="{{ post.id }}">Share</button>
         </div>

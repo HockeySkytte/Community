@@ -20,6 +20,7 @@
 body {
   margin: 0;
   min-height: 100vh;
+  overflow-x: hidden;
   color: var(--text);
   font-family: "IBM Plex Sans", sans-serif;
   background:
@@ -709,18 +710,71 @@ textarea {
   margin: 0.65rem 0;
 }
 
+.rich-body a,
+.rich-editor a {
+  color: #9ecbff;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.rich-body a:hover,
+.rich-editor a:hover {
+  color: #c3e0ff;
+}
+
 .inline-media {
   margin: 0.95rem 0;
 }
 
+.rich-editor .inline-media {
+  position: relative;
+  padding: 0.2rem;
+  border-radius: 1.05rem;
+}
+
+.rich-editor .inline-media.is-selected {
+  outline: 2px solid rgba(255, 107, 53, 0.65);
+  outline-offset: 1px;
+}
+
+.rich-editor .inline-media.is-dragging {
+  opacity: 0.6;
+}
+
 .inline-media img {
-  width: auto;
-  max-width: min(100%, 760px);
-  max-height: 560px;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  max-height: min(70vh, 560px);
   object-fit: contain;
   border-radius: 1rem;
   border: 1px solid rgba(154, 191, 255, 0.28);
   cursor: zoom-in;
+}
+
+.rich-editor .inline-media img {
+  cursor: grab;
+}
+
+.inline-media-remove {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+  border: 1px solid rgba(154, 191, 255, 0.35);
+  background: rgba(8, 21, 38, 0.78);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 0.22rem 0.6rem;
+  font-size: 0.75rem;
+  line-height: 1.1;
+  cursor: pointer;
+  display: none;
+}
+
+.rich-editor .inline-media:hover .inline-media-remove,
+.rich-editor .inline-media.is-selected .inline-media-remove {
+  display: inline-flex;
 }
 
 .inline-video {
@@ -1012,15 +1066,99 @@ textarea {
 }
 
 .composer-toolbar {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.55rem;
+  border: 1px solid rgba(154, 191, 255, 0.24);
+  border-radius: 0.85rem;
+  background: rgba(4, 14, 28, 0.62);
+  margin: 0;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transform: translateY(-0.15rem);
+  transition: max-height 140ms ease, opacity 140ms ease, margin-bottom 140ms ease, transform 140ms ease;
+}
+
+.composer-toolbar-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
-  margin: 0 0 0.5rem;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .composer-toolbar .ghost-button {
-  padding: 0.48rem 0.72rem;
-  font-size: 0.84rem;
+  min-width: 2.2rem;
+  height: 2.2rem;
+  padding: 0 0.5rem;
+  font-size: 0.88rem;
+  border-radius: 0.65rem;
+}
+
+.toolbar-icon-button {
+  width: 2.2rem;
+  padding: 0;
+  font-weight: 700;
+}
+
+.toolbar-icon-button.is-italic {
+  font-style: italic;
+}
+
+.toolbar-icon-button.is-underlined {
+  text-decoration: underline;
+}
+
+.toolbar-icon-button.is-strike {
+  text-decoration: line-through;
+}
+
+.toolbar-icon-button.is-active {
+  border-color: rgba(255, 107, 53, 0.62);
+  background: rgba(255, 107, 53, 0.2);
+  color: #ffd7c8;
+}
+
+.composer-toolbar-separator {
+  width: 1px;
+  height: 1.6rem;
+  margin: 0 0.15rem;
+  background: rgba(154, 191, 255, 0.28);
+}
+
+.composer-toolbar-select {
+  height: 2.2rem;
+  padding: 0 0.6rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(154, 191, 255, 0.24);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  min-width: 6.4rem;
+}
+
+.composer-toolbar-select:focus {
+  outline: none;
+  border-color: rgba(255, 107, 53, 0.62);
+  box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.16);
+}
+
+.composer-toolbar-select option {
+  background: #10233f;
+  color: #eaf3ff;
+}
+
+.composer-toolbar-row .composer-toolbar-select {
+  min-width: 7rem;
+}
+
+form[data-rich-composer="1"].is-editor-active .composer-toolbar {
+  max-height: 11rem;
+  opacity: 1;
+  margin: 0 0 0.5rem;
+  overflow: visible;
+  pointer-events: auto;
+  transform: translateY(0);
 }
 
 .post-owner-actions {
@@ -1125,6 +1263,18 @@ textarea {
   background: rgba(2, 11, 20, 0.58);
   color: var(--text);
   line-height: 1.65;
+  cursor: text;
+}
+
+.rich-editor:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.28);
+}
+
+form[data-rich-composer="1"].is-editor-active .rich-editor {
+  border-color: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22);
 }
 
 .reply-form .rich-editor {

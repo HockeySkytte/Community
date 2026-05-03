@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from flask import Flask
+from flask import Flask, send_from_directory
 
 from .auth_helpers import ensure_csrf_token, get_current_user
 from .config import Config
@@ -27,6 +27,10 @@ def create_app(test_config: dict | None = None) -> Flask:
     def health() -> tuple[dict, int]:
         return {"status": "ok"}, 200
 
+    @app.get("/favicon.ico")
+    def favicon():
+        return send_from_directory(app.static_folder or "", "Logo.png", mimetype="image/png")
+
     @app.context_processor
     def inject_shell_state() -> dict:
         auth_user = get_current_user()
@@ -40,6 +44,7 @@ def create_app(test_config: dict | None = None) -> Flask:
             "auth_user": auth_user,
             "csrf_token": ensure_csrf_token(),
             "unread_notification_count": unread_count,
+            "ga_measurement_id": app.config.get("GA_MEASUREMENT_ID") or "",
         }
 
     app.register_blueprint(auth_bp)
