@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Edit post | Hockey Community{% endblock %}
+
+{% block content %}
+<div class="create-post-layout">
+  <div class="panel composer-panel">
+    <div class="section-heading compact">
+      <div>
+        <p class="eyebrow"><a href="{{ url_for('community.hub_feed', hub_slug=post.hub.slug) if post.hub else url_for('community.home') }}">/{{ post.hub.slug if post.hub else 'hub' }}</a></p>
+        <h1>Edit post</h1>
+      </div>
+      <a class="ghost-button" href="{{ url_for('community.post_detail', post_id=post.id) }}">Back to post</a>
+    </div>
+
+    <form method="post" action="{{ url_for('community.update_post', post_id=post.id) }}" enctype="multipart/form-data" class="composer-form" data-rich-composer="1">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="file" name="images" accept="image/png,image/jpeg,image/webp,image/gif" multiple class="visually-hidden" tabindex="-1" aria-hidden="true">
+
+      <label>
+        <span>Title</span>
+        <input type="text" name="title" maxlength="160" required value="{{ post.title }}">
+      </label>
+
+      <label>
+        <span>Body</span>
+        <div class="composer-toolbar" data-composer-toolbar>
+          <button type="button" class="ghost-button" data-format="b">Bold</button>
+          <button type="button" class="ghost-button" data-format="i">Italic</button>
+          <button type="button" class="ghost-button" data-format="u">Underline</button>
+          <button type="button" class="ghost-button" data-format="size">Text size</button>
+          <button type="button" class="ghost-button" data-format="link">Hyperlink</button>
+        </div>
+        <div class="rich-editor" data-rich-editor contenteditable="true">{{ post.rendered_body_html }}</div>
+        <textarea name="body" rows="12" class="visually-hidden" tabindex="-1" aria-hidden="true">{{ post.body }}</textarea>
+      </label>
+
+      <label>
+        <span>Replace thumbnail image</span>
+        <input type="file" name="thumbnail" accept="image/png,image/jpeg,image/webp,image/gif">
+      </label>
+
+      <div class="composer-actions">
+        <span class="helper-note">You can still paste new inline images while editing.</span>
+        <div class="composer-action-buttons">
+          <button type="button" class="ghost-button" data-review-post>Review post</button>
+          <button type="submit" class="primary-button">Save changes</button>
+        </div>
+      </div>
+
+      <section class="panel review-panel" data-review-panel hidden>
+        <div class="section-heading compact">
+          <div>
+            <p class="eyebrow">Preview</p>
+            <h2 data-review-title>{{ post.title }}</h2>
+          </div>
+          <button type="button" class="ghost-button" data-close-review>Close preview</button>
+        </div>
+        <div class="detail-body rich-body" data-review-body></div>
+      </section>
+    </form>
+  </div>
+</div>
+{% endblock %}

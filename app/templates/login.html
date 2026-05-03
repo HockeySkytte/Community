@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Login | Hockey Community{% endblock %}
+
+{% block content %}
+<section class="auth-layout">
+  <div class="hero-card auth-hero">
+    <p class="eyebrow">Hockey Community</p>
+    <h1>Join the conversation across NHL, PWHL, and Hockey Analytics.</h1>
+    <p>
+      Hockey Community gives fans one place to follow discussions, post updates, react to threads,
+      and stay connected across every hub.
+    </p>
+    <ul class="hero-points">
+      <li>Dedicated hubs for NHL, PWHL, and Hockey Analytics</li>
+      <li>Threaded discussions with comments, replies, and reactions</li>
+      <li>Rich posts with images, embeds, and community notifications</li>
+    </ul>
+  </div>
+
+  <form method="post" class="panel auth-panel">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="next" value="{{ next_url or '/home' }}">
+    <p class="eyebrow">Sign In</p>
+    <h2>Sign in with your Hockey Statistics account.</h2>
+    <label>
+      <span>Email</span>
+      <input type="email" name="email" autocomplete="email" required>
+    </label>
+    <label>
+      <span>Password</span>
+      <input type="password" name="password" autocomplete="current-password" required>
+    </label>
+    <button type="submit" class="primary-button">Login</button>
+    <p class="helper-note">Need an account? <a href="{{ url_for('auth.signup') }}">Create one here</a>.</p>
+    {% if not auth_enabled %}
+    <p class="helper-note">Supabase auth keys are not configured yet. Set the environment variables in .env before using the login flow.</p>
+    {% endif %}
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Home | Hockey Community{% endblock %}
+
+{% block content %}
+<section class="hero-card hero-grid">
+  <div>
+    <p class="eyebrow">Community Feed</p>
+    <h1>Three hubs to start, one shared identity layer.</h1>
+    <p>
+      The app now reads from the same Supabase user_accounts table as NHL while keeping all community data in dedicated tables.
+      This is the first working slice of the product: feeds, threads, reactions, comments, and notifications.
+    </p>
+  </div>
+  <div class="hero-stats">
+    <div><strong>{{ hubs|length }}</strong><span>Live hubs</span></div>
+    <div><strong>{{ posts|length }}</strong><span>Recent posts</span></div>
+    <div><strong>{{ recent_comment_count }}</strong><span>Recent comments</span></div>
+  </div>
+</section>
+
+<section class="hub-grid">
+  {% for hub in hubs %}
+  <article class="panel hub-card">
+    <div class="hub-card-top">
+      <span class="eyebrow">/{{ hub.slug }}</span>
+    </div>
+    <h2>{{ hub.name }}</h2>
+    <p>{{ hub.description }}</p>
+    <div class="hub-card-links">
+      <a class="primary-link" href="{{ url_for('community.hub_feed', hub_slug=hub.slug) }}">Open hub</a>
+      {% if hub.site_url %}
+      <a class="ghost-button" href="{{ hub.site_url }}" target="_blank" rel="noopener noreferrer">Visit site</a>
+      {% endif %}
+    </div>
+  </article>
+  {% endfor %}
+</section>
+
+<section class="feed-layout">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Latest</p>
+      <h2>Fresh posts across every hub</h2>
+    </div>
+  </div>
+
+  <div class="feed-stack">
+    {% for post in posts %}
+    <article class="panel post-card-compact" data-post-url="{{ url_for('community.post_detail', post_id=post.id) }}">
+      {% if post.preview_image_url %}
+      <img class="post-card-thumb" src="{{ post.preview_image_url }}" alt="">
+      {% elif post.media %}
+      <img class="post-card-thumb" src="{{ post.media[0].public_url }}" alt="">
+      {% else %}
+      <div class="post-card-thumb post-card-thumb-placeholder"></div>
+      {% endif %}
+      <div class="post-card-content">
+        <div class="post-meta-row">
+          <a class="hub-tag" href="{{ url_for('community.hub_feed', hub_slug=post.hub.slug) if post.hub else '#' }}">/{{ post.hub.slug if post.hub else 'hub' }}</a>
+          <span>{{ post.author_display_name }}</span>
+        </div>
+        <h3><a href="{{ url_for('community.post_detail', post_id=post.id) }}">{{ post.title }}</a></h3>
+        {% if post.body_preview %}<p class="post-body-preview">{{ post.body_preview }}</p>{% endif %}
+        <div class="post-actions-row">
+          <button class="reaction-button" data-target-id="{{ post.id }}" data-target-type="post" data-vote-type="like">▲ <span class="score-label">{{ post.score }}</span></button>
+          <button class="reaction-button secondary" data-target-id="{{ post.id }}" data-target-type="post" data-vote-type="dislike">▼</button>
+          <a class="ghost-button" href="{{ url_for('community.post_detail', post_id=post.id) }}#comments">{{ post.comment_count }} comments</a>
+          <button class="ghost-button share-trigger" data-share-url="{{ post.share_url }}" data-share-title="{{ post.title }}" data-post-id="{{ post.id }}">Share</button>
+        </div>
+      </div>
+    </article>
+    {% else %}
+    <article class="panel empty-state">
+      <h3>No posts yet</h3>
+      <p>Seed the first thread inside one of the hubs and the home feed will start filling in here.</p>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

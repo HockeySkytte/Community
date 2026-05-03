@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}{{ hub.name }} | Hockey Community{% endblock %}
+
+{% block content %}
+<div class="hub-page">
+
+  <!-- ── Feed column ── -->
+  <section class="feed-column">
+    <header class="feed-column-header">
+      <p class="eyebrow">/{{ hub.slug }}</p>
+      <h1>{{ hub.name }}</h1>
+    </header>
+
+    {% if search_query %}
+    <p class="helper-note search-results-note">
+      Results for <strong>{{ search_query }}</strong> —
+      <a href="{{ url_for('community.hub_feed', hub_slug=hub.slug) }}">clear search</a>
+    </p>
+    {% endif %}
+
+    <div class="feed-stack">
+      {% for post in posts %}
+      <article class="panel post-card-compact" data-post-url="{{ url_for('community.post_detail', post_id=post.id) }}">
+        {% if post.preview_image_url %}
+        <img class="post-card-thumb" src="{{ post.preview_image_url }}" alt="">
+        {% elif post.media %}
+        <img class="post-card-thumb" src="{{ post.media[0].public_url }}" alt="">
+        {% else %}
+        <div class="post-card-thumb post-card-thumb-placeholder"></div>
+        {% endif %}
+        <div class="post-card-content">
+          <div class="post-meta-row">
+            <span>{{ post.author_display_name }}</span>
+            <span>{{ post.created_at[:10] if post.created_at else '' }}</span>
+          </div>
+          <h2><a href="{{ url_for('community.post_detail', post_id=post.id) }}">{{ post.title }}</a></h2>
+          {% if post.body_preview %}<p class="post-body-preview">{{ post.body_preview }}</p>{% endif %}
+          <div class="post-actions-row">
+            <button class="reaction-button" data-target-id="{{ post.id }}" data-target-type="post" data-vote-type="like">▲ <span class="score-label">{{ post.score }}</span></button>
+            <button class="reaction-button secondary" data-target-id="{{ post.id }}" data-target-type="post" data-vote-type="dislike">▼</button>
+            <a class="ghost-button" href="{{ url_for('community.post_detail', post_id=post.id) }}#comments">{{ post.comment_count }} comments</a>
+            <button class="ghost-button share-trigger" data-share-url="{{ post.share_url }}" data-share-title="{{ post.title }}" data-post-id="{{ post.id }}">Share</button>
+          </div>
+        </div>
+      </article>
+      {% else %}
+      <article class="panel empty-state">
+        <h3>No threads yet in {{ hub.name }}</h3>
+        <p>Use the <a href="{{ url_for('community.new_post_page', hub_slug=hub.slug) }}">Create post</a> button to start the first thread.</p>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- ── Sidebar column ── -->
+  <aside class="hub-sidebar-col">
+
+    <div class="panel sidebar-card">
+      <a class="primary-link block-button" href="{{ url_for('community.new_post_page', hub_slug=hub.slug) }}">+ Create post</a>
+    </div>
+
+    <div class="panel sidebar-card">
+      <p class="eyebrow">Sort</p>
+      <div class="sort-links">
+        <a class="{% if sort == 'new' %}active{% endif %}" href="{{ url_for('community.hub_feed', hub_slug=hub.slug, sort='new') }}">New</a>
+        <a class="{% if sort == 'top' %}active{% endif %}" href="{{ url_for('community.hub_feed', hub_slug=hub.slug, sort='top') }}">Top</a>
+        <a class="{% if sort == 'my_posts' %}active{% endif %}" href="{{ url_for('community.hub_feed', hub_slug=hub.slug, sort='my_posts') }}">My posts</a>
+      </div>
+    </div>
+
+    <div class="panel sidebar-card">
+      <p class="eyebrow">Search</p>
+      <form class="sidebar-search" method="get" action="{{ url_for('community.hub_feed', hub_slug=hub.slug) }}">
+        <input type="search" name="q" value="{{ search_query or '' }}" placeholder="Title or author…" autocomplete="off">
+        <button type="submit" class="ghost-button">Search</button>
+      </form>
+    </div>
+
+    <div class="panel sidebar-card">
+      <p class="eyebrow">Scope</p>
+      <p>{{ hub.description }}</p>
+      {% if hub.site_url %}
+      <a class="ghost-button" href="{{ hub.site_url }}" target="_blank" rel="noopener noreferrer">Visit {{ hub.name }} site</a>
+      {% endif %}
+    </div>
+
+  </aside>
+</div>
+{% endblock %}

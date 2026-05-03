@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Messages | Hockey Community{% endblock %}
+
+{% block content %}
+<section class="messages-layout">
+  <aside class="panel conversations-panel">
+    <div class="section-heading compact">
+      <div>
+        <p class="eyebrow">Direct messages</p>
+        <h1>Inbox</h1>
+      </div>
+    </div>
+    <form method="post" action="{{ url_for('community.start_conversation') }}" class="start-dm-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label>
+        <span>Start with username</span>
+        <input type="text" name="username" placeholder="for example: hockeyskytte">
+      </label>
+      <button type="submit" class="primary-button">Start conversation</button>
+    </form>
+
+    <div class="conversation-list">
+      {% for conversation in conversations %}
+      <a class="conversation-link {% if selected_conversation and selected_conversation.id == conversation.id %}active{% endif %}" href="{{ url_for('community.messages_page', conversation=conversation.id) }}">
+        <strong>{{ conversation.title }}</strong>
+        <span>{{ conversation.latest_message.body if conversation.latest_message else 'No messages yet' }}</span>
+      </a>
+      {% else %}
+      <div class="empty-inline">No conversations yet.</div>
+      {% endfor %}
+    </div>
+  </aside>
+
+  <section class="panel dm-shell {% if selected_conversation %}is-active{% endif %}"
+           {% if selected_conversation %}data-chat-endpoint="{{ url_for('community.direct_messages_api', conversation_id=selected_conversation.id) }}" data-chat-post-endpoint="{{ url_for('community.create_direct_message_api', conversation_id=selected_conversation.id) }}"{% endif %}>
+    {% if selected_conversation %}
+    <div class="section-heading compact">
+      <div>
+        <p class="eyebrow">Conversation</p>
+        <h2>{{ selected_conversation.title }}</h2>
+      </div>
+    </div>
+    <div class="chat-stream" id="chatStream">
+      {% for message in messages %}
+      <article class="chat-message {% if auth_user and message.author_auth_user_id == auth_user.user_id %}is-own{% endif %}">
+        <strong>{{ message.author_display_name }}</strong>
+        <p>{{ message.body }}</p>
+      </article>
+      {% endfor %}
+    </div>
+    <form class="chat-form" data-chat-form>
+      <textarea name="body" rows="2" maxlength="800" placeholder="Write a direct message"></textarea>
+      <button type="submit" class="primary-button">Send</button>
+    </form>
+    {% else %}
+    <div class="empty-state tall-empty-state">
+      <h2>Select or start a conversation</h2>
+      <p>The schema and endpoints for direct messages are wired. Pick a conversation from the left or start a new one by username.</p>
+    </div>
+    {% endif %}
+  </section>
+</section>
+{% endblock %}

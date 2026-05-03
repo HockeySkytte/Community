@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Community Bans | Hockey Community{% endblock %}
+
+{% block content %}
+<section class="panel admin-bans-shell">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Admin</p>
+      <h1>Community Ban Controls</h1>
+    </div>
+  </div>
+  <p class="helper-note">Bans only block posting and commenting in Community. They do not change Pro access or NHL App feature access.</p>
+
+  <form method="get" class="sidebar-search admin-search-form" action="{{ url_for('community.community_bans_page') }}">
+    <input type="search" name="q" value="{{ search_query or '' }}" placeholder="Search by email, username, display name, or user id" autocomplete="off">
+    <button type="submit" class="ghost-button">Search</button>
+  </form>
+
+  <div class="admin-bans-table-wrap">
+    <table class="admin-bans-table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Tier</th>
+          <th>Current Ban</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <td>
+            <strong>{{ user.display_name or user.username or user.email }}</strong><br>
+            <span class="helper-note">@{{ user.username or 'member' }} • {{ user.email or '' }}</span>
+          </td>
+          <td>{{ user.account_tier or user.plan or 'community' }}</td>
+          <td>
+            {% if user.ban_active %}
+            <span class="admin-ban-badge active">Active until {{ user.banned_until_dt.strftime('%Y-%m-%d %H:%M UTC') if user.banned_until_dt else '' }}</span>
+            {% if user.community_ban_reason %}
+            <div class="helper-note">{{ user.community_ban_reason }}</div>
+            {% endif %}
+            {% else %}
+            <span class="admin-ban-badge">None</span>
+            {% endif %}
+          </td>
+          <td>
+            <form method="post" class="admin-ban-form" action="{{ url_for('community.set_community_ban_route') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <input type="hidden" name="target_auth_user_id" value="{{ user.auth_user_id }}">
+              <div class="admin-ban-inputs">
+                <input type="number" name="ban_days" min="1" max="365" placeholder="Days">
+                <input type="text" name="reason" maxlength="180" placeholder="Reason (optional)">
+              </div>
+              <div class="admin-ban-buttons">
+                <button type="submit" name="action" value="ban" class="ghost-button">Set ban</button>
+                <button type="submit" name="action" value="clear" class="ghost-button">Clear</button>
+              </div>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="4">No users found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% macro render_comment(comment, post_id, csrf_token) %}
+<article class="comment-card panel depth-{{ comment.depth or 0 }}">
+  <div class="post-meta-row">
+    <span>{{ comment.author_display_name }}</span>
+    <span>{{ comment.created_at[:19].replace('T', ' ') if comment.created_at else '' }}</span>
+  </div>
+  <div class="comment-body rich-body">{{ comment.rendered_body_html }}</div>
+  <div class="post-actions-row compact">
+    <button class="reaction-button" data-target-id="{{ comment.id }}" data-target-type="comment" data-vote-type="like">▲ <span class="score-label">{{ comment.score }}</span></button>
+    <button class="reaction-button secondary" data-target-id="{{ comment.id }}" data-target-type="comment" data-vote-type="dislike">▼</button>
+    {% if comment.can_delete %}
+    <form method="post" action="{{ url_for('community.delete_comment', comment_id=comment.id) }}" onsubmit="return confirm('Delete this comment?');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="ghost-button">Delete</button>
+    </form>
+    {% endif %}
+  </div>
+  <form method="post" action="{{ url_for('community.add_comment', post_id=post_id) }}" enctype="multipart/form-data" class="reply-form" data-rich-composer="1">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="parent_comment_id" value="{{ comment.id }}">
+    <input type="file" name="images" accept="image/png,image/jpeg,image/webp,image/gif" multiple class="visually-hidden" tabindex="-1" aria-hidden="true">
+    <div class="composer-toolbar" data-composer-toolbar>
+      <button type="button" class="ghost-button" data-format="b">B</button>
+      <button type="button" class="ghost-button" data-format="i">I</button>
+      <button type="button" class="ghost-button" data-format="u">U</button>
+      <button type="button" class="ghost-button" data-format="size">Size</button>
+      <button type="button" class="ghost-button" data-format="link">Link</button>
+    </div>
+    <div class="rich-editor" data-rich-editor contenteditable="true" data-editor-placeholder="Reply to this comment"></div>
+    <textarea name="body" rows="2" class="visually-hidden" tabindex="-1" aria-hidden="true"></textarea>
+    <button type="submit" class="ghost-button">Reply</button>
+  </form>
+  {% if comment.children %}
+  <div class="comment-children">
+    {% for child in comment.children %}
+      {{ render_comment(child, post_id, csrf_token) }}
+    {% endfor %}
+  </div>
+  {% endif %}
+</article>
+{% endmacro %}
+
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} | Hockey Community{% endblock %}
+
+{% block content %}
+<article class="panel post-detail-card">
+  <div class="post-meta-row">
+    <a class="hub-tag" href="{{ url_for('community.hub_feed', hub_slug=post.hub.slug) if post.hub else '#' }}">/{{ post.hub.slug if post.hub else 'hub' }}</a>
+    <span>{{ post.author_display_name }}</span>
+  </div>
+  <h1>{{ post.title }}</h1>
+  {% if post.can_edit or post.can_delete or post.can_view_insights %}
+  <div class="post-owner-actions">
+    {% if post.can_edit %}
+    <a class="ghost-button" href="{{ url_for('community.edit_post_page', post_id=post.id) }}">Edit</a>
+    {% endif %}
+    {% if post.can_view_insights %}
+    <a class="ghost-button" href="{{ post.insights_url }}">Insights</a>
+    {% endif %}
+    {% if post.can_delete %}
+    <form method="post" action="{{ url_for('community.delete_post', post_id=post.id) }}" onsubmit="return confirm('Delete this post? This cannot be undone.');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="ghost-button">Delete</button>
+    </form>
+    {% endif %}
+  </div>
+  {% endif %}
+  {% if post.preview_image_url %}
+  <img class="post-hero-image" src="{{ post.preview_image_url }}" alt="Post thumbnail">
+  {% endif %}
+  {% if post.rendered_body_html %}<div class="detail-body rich-body">{{ post.rendered_body_html }}</div>{% endif %}
+
+  {% if post.media and not post.has_inline_images %}
+  <div class="media-grid detail-media-grid">
+    {% for media in post.media %}
+    <img src="{{ media.public_url }}" alt="Post media">
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if post.video_embed_url %}
+  <div class="video-frame">
+    <iframe src="{{ post.video_embed_url }}" title="Embedded post video" loading="lazy" allowfullscreen></iframe>
+  </div>
+  {% endif %}
+
+  <div class="post-actions-row">
+    <button class="reaction-button" data-target-id="{{ post.id }}" data-target-type="post" data-vote-type="like">▲ <span class="score-label">{{ post.score }}</span></button>
+    <button class="reaction-button secondary" data-target-id="{{ post.id }}" data-target-type="post" data-vote-type="dislike">▼</button>
+    <button class="ghost-button share-trigger" data-share-url="{{ post.share_url }}" data-share-title="{{ post.title }}" data-post-id="{{ post.id }}">Share</button>
+  </div>
+</article>
+
+<section class="panel comment-composer-card" id="comments">
+  <div class="section-heading compact">
+    <div>
+      <p class="eyebrow">Discussion</p>
+      <h2>{{ post.comment_count }} comments</h2>
+    </div>
+  </div>
+  <form method="post" action="{{ url_for('community.add_comment', post_id=post.id) }}" enctype="multipart/form-data" class="composer-form" data-rich-composer="1">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="file" name="images" accept="image/png,image/jpeg,image/webp,image/gif" multiple class="visually-hidden" tabindex="-1" aria-hidden="true">
+    <div class="composer-toolbar" data-composer-toolbar>
+      <button type="button" class="ghost-button" data-format="b">Bold</button>
+      <button type="button" class="ghost-button" data-format="i">Italic</button>
+      <button type="button" class="ghost-button" data-format="u">Underline</button>
+      <button type="button" class="ghost-button" data-format="size">Text size</button>
+      <button type="button" class="ghost-button" data-format="link">Hyperlink</button>
+    </div>
+    <div class="rich-editor" data-rich-editor contenteditable="true" data-editor-placeholder="Add to the thread"></div>
+    <textarea name="body" rows="4" class="visually-hidden" tabindex="-1" aria-hidden="true"></textarea>
+    <div class="composer-actions">
+      <span class="helper-note">Replies stay nested through parent_comment_id in the database.</span>
+      <button type="submit" class="primary-button">Comment</button>
+    </div>
+  </form>
+</section>
+
+<section class="comments-stack">
+  {% for comment in comment_tree %}
+    {{ render_comment(comment, post.id, csrf_token) }}
+  {% else %}
+  <article class="panel empty-state">
+    <h3>No comments yet</h3>
+    <p>The thread page is live. Add the first reply and the nesting model is in place.</p>
+  </article>
+  {% endfor %}
+</section>
+{% endblock %}

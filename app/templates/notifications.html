@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications | Hockey Community{% endblock %}
+
+{% block content %}
+<section class="panel page-heading-panel">
+  <div class="section-heading compact">
+    <div>
+      <p class="eyebrow">Inbox</p>
+      <h1>Notifications</h1>
+    </div>
+    <form method="post" action="{{ url_for('community.mark_notifications_read') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="ghost-button">Mark all read</button>
+    </form>
+  </div>
+</section>
+
+<section class="feed-stack">
+  {% for notification in notifications %}
+  <article class="panel notification-card {% if not notification.is_read %}notification-unread{% endif %}">
+    <a class="notification-main-link" href="{{ url_for('community.open_notification', notification_id=notification.id) }}">
+      <p><strong>{{ notification.actor_name }}</strong> {{ notification.message }}</p>
+      <small>{{ notification.created_at[:19].replace('T', ' ') if notification.created_at else '' }}</small>
+    </a>
+    <form method="post" action="{{ url_for('community.mark_notifications_read') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="notification_id" value="{{ notification.id }}">
+      <button type="submit" class="ghost-button">Mark read</button>
+    </form>
+  </article>
+  {% else %}
+  <article class="panel empty-state">
+    <h3>No notifications yet</h3>
+    <p>Replies, reactions, and direct messages will appear here.</p>
+  </article>
+  {% endfor %}
+</section>
+{% endblock %}

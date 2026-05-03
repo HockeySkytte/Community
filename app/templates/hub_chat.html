@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}{{ hub.name }} Chat | Hockey Community{% endblock %}
+
+{% block content %}
+<section class="panel chat-shell" data-chat-endpoint="{{ url_for('community.chat_messages_api', hub_slug=hub.slug) }}" data-chat-post-endpoint="{{ url_for('community.create_chat_message_api', hub_slug=hub.slug) }}">
+  <div class="section-heading compact">
+    <div>
+      <p class="eyebrow">Hub chat</p>
+      <h1>{{ hub.name }} / General</h1>
+    </div>
+    <a class="ghost-button" href="{{ url_for('community.hub_feed', hub_slug=hub.slug) }}">Back to feed</a>
+  </div>
+  <div class="chat-stream" id="chatStream">
+    {% for message in messages %}
+    <article class="chat-message">
+      <strong>{{ message.author_display_name }}</strong>
+      <p>{{ message.body }}</p>
+    </article>
+    {% endfor %}
+  </div>
+  <form class="chat-form" data-chat-form>
+    <textarea name="body" rows="2" maxlength="800" placeholder="Drop a thought into the live hub chat"></textarea>
+    <button type="submit" class="primary-button">Send</button>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account | Hockey Community{% endblock %}
+
+{% block content %}
+<section class="auth-layout">
+  <div class="hero-card auth-hero">
+    <p class="eyebrow">Create Account</p>
+    <h1>Choose the access level that fits how you follow the game.</h1>
+    <p>
+      If you already have an account on nhl.hockey-statistics.com, you can sign in here with the same credentials.
+      New users can start in Community and upgrade to Pro any time on nhl.hockey-statistics.com.
+    </p>
+    <ul class="hero-points">
+      <li>Pro: full access to Hockey Statistics features and Community access</li>
+      <li>7-Day Trial: temporary Pro access that becomes Community access after the trial ends</li>
+      <li>Community: access to the Community app without Pro features on nhl.hockey-statistics.com</li>
+    </ul>
+  </div>
+
+  <form method="post" class="panel auth-panel">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="next" value="{{ next_url or '/home' }}">
+    <p class="eyebrow">Sign Up</p>
+    <h2>Create your Hockey Community account.</h2>
+    <label>
+      <span>Display name</span>
+      <input type="text" name="display_name" maxlength="60" autocomplete="name" required>
+    </label>
+    <label>
+      <span>Username</span>
+      <input type="text" name="username" minlength="3" maxlength="30" pattern="[a-z0-9_]+" title="Lowercase letters, numbers, and underscores only" autocomplete="username" required>
+    </label>
+    <label>
+      <span>Email</span>
+      <input type="email" name="email" autocomplete="email" required>
+    </label>
+    <label>
+      <span>Password</span>
+      <input type="password" name="password" minlength="8" autocomplete="new-password" required>
+    </label>
+    <label>
+      <span>Confirm password</span>
+      <input type="password" name="confirm_password" minlength="8" autocomplete="new-password" required>
+    </label>
+    <button type="submit" class="primary-button">Create account</button>
+    <p class="helper-note">You can upgrade to Pro at <a href="https://nhl.hockey-statistics.com" target="_blank" rel="noopener noreferrer">nhl.hockey-statistics.com</a>.</p>
+    <p class="helper-note">Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a>.</p>
+    {% if not auth_enabled %}
+    <p class="helper-note">Supabase auth keys are not configured yet. Set the environment variables in .env before using this flow.</p>
+    {% endif %}
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Insights | {{ post.title }}{% endblock %}
+
+{% block content %}
+<section class="panel insights-header">
+  <div>
+    <p class="eyebrow">Post insights</p>
+    <h1>{{ post.title }}</h1>
+    <p class="helper-note">/{{ post.hub.slug if post.hub else 'hub' }} by {{ post.author_display_name }}</p>
+  </div>
+  <div class="insights-links">
+    <a class="ghost-button" href="{{ url_for('community.post_detail', post_id=post.id) }}">Back to post</a>
+    {% if post.can_edit %}<a class="ghost-button" href="{{ url_for('community.edit_post_page', post_id=post.id) }}">Edit post</a>{% endif %}
+  </div>
+</section>
+
+<section class="insights-grid">
+  <article class="panel metric-card"><p class="eyebrow">Views</p><strong>{{ metrics.views }}</strong></article>
+  <article class="panel metric-card"><p class="eyebrow">Likes</p><strong>{{ metrics.likes }}</strong></article>
+  <article class="panel metric-card"><p class="eyebrow">Dislikes</p><strong>{{ metrics.dislikes }}</strong></article>
+  <article class="panel metric-card"><p class="eyebrow">Shares</p><strong>{{ metrics.shares }}</strong></article>
+</section>
+
+<section class="panel insights-chart-panel">
+  <div class="section-heading compact">
+    <div>
+      <p class="eyebrow">Cumulative views</p>
+      <h2>Views over time</h2>
+    </div>
+    <div class="timeframe-links">
+      <a class="ghost-button {% if range_key == '24h' %}active{% endif %}" href="{{ url_for('community.post_insights', post_id=post.id, range='24h') }}">24h</a>
+      <a class="ghost-button {% if range_key == '7d' %}active{% endif %}" href="{{ url_for('community.post_insights', post_id=post.id, range='7d') }}">7d</a>
+      <a class="ghost-button {% if range_key == '30d' %}active{% endif %}" href="{{ url_for('community.post_insights', post_id=post.id, range='30d') }}">30d</a>
+      <a class="ghost-button {% if range_key == '90d' %}active{% endif %}" href="{{ url_for('community.post_insights', post_id=post.id, range='90d') }}">90d</a>
+      <a class="ghost-button {% if range_key == 'all' %}active{% endif %}" href="{{ url_for('community.post_insights', post_id=post.id, range='all') }}">All</a>
+    </div>
+  </div>
+
+  <div class="insights-chart-shell" data-insights-chart='{{ points | tojson }}'>
+    <svg id="insightsChart" viewBox="0 0 960 320" preserveAspectRatio="none" role="img" aria-label="Cumulative views chart"></svg>
+  </div>
+</section>
+{% endblock %}

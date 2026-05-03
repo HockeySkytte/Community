@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Profile | Hockey Community{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+
+  <!-- ── Profile header ── -->
+  <div class="panel profile-header">
+    {% if profile_user.profile_image_url %}
+    <img class="profile-avatar-image" src="{{ profile_user.profile_image_url }}" alt="{{ profile_user.display_name or profile_user.username }} profile image">
+    {% else %}
+    <div class="profile-avatar-circle">{{ (profile_user.display_name or profile_user.username or '?')[0].upper() }}</div>
+    {% endif %}
+    <div>
+      <h1 class="profile-display-name">{{ profile_user.display_name or profile_user.username }}</h1>
+      <p class="profile-username-line">@{{ profile_user.username or 'member' }}</p>
+    </div>
+  </div>
+
+  <!-- ── Tabs ── -->
+  <div class="profile-tabs">
+    <a class="profile-tab {% if active_tab_name == 'posts' %}active{% endif %}"
+       href="{{ url_for('community.profile_page', tab='posts') }}">Posts</a>
+    <a class="profile-tab {% if active_tab_name == 'comments' %}active{% endif %}"
+       href="{{ url_for('community.profile_page', tab='comments') }}">Comments</a>
+    <a class="profile-tab {% if active_tab_name == 'settings' %}active{% endif %}"
+       href="{{ url_for('community.profile_page', tab='settings') }}">Settings</a>
+  </div>
+
+  <!-- ── Posts tab ── -->
+  {% if active_tab_name == 'posts' %}
+  <div class="feed-stack">
+    {% for post in posts %}
+    <article class="panel post-card-compact" data-post-url="{{ url_for('community.post_detail', post_id=post.id) }}">
+      {% if post.preview_image_url %}
+      <img class="post-card-thumb" src="{{ post.preview_image_url }}" alt="">
+      {% elif post.media %}
+      <img class="post-card-thumb" src="{{ post.media[0].public_url }}" alt="">
+      {% else %}
+      <div class="post-card-thumb post-card-thumb-placeholder"></div>
+      {% endif %}
+      <div class="post-card-content">
+        <div class="post-meta-row">
+          <a class="hub-tag" href="{{ url_for('community.hub_feed', hub_slug=post.hub.slug) if post.hub else '#' }}">/{{ post.hub.slug if post.hub else 'hub' }}</a>
+          <span>{{ post.created_at[:10] if post.created_at else '' }}</span>
+        </div>
+        <h3><a href="{{ url_for('community.post_detail', post_id=post.id) }}">{{ post.title }}</a></h3>
+        {% if post.body_preview %}<p class="post-body-preview">{{ post.body_preview }}</p>{% endif %}
+        <div class="post-actions-row">
+          <span class="reaction-button no-pointer">▲ {{ post.score }}</span>
+          <a class="ghost-button" href="{{ url_for('community.post_detail', post_id=post.id) }}#comments">{{ post.comment_count }} comments</a>
+          <a class="ghost-button" href="{{ url_for('community.edit_post_page', post_id=post.id) }}">Edit</a>
+        </div>
+      </div>
+    </article>
+    {% else %}
+    <div class="panel empty-state">
+      <h3>No posts yet</h3>
+      <p>Head over to a hub and start your first thread.</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- ── Comments tab ── -->
+  {% elif active_tab_name == 'comments' %}
+  <div class="feed-stack">
+    {% for comment in comments %}
+    <div class="panel profile-comment-card">
+      <div class="post-meta-row">
+        <a class="hub-tag" href="{{ url_for('community.post_detail', post_id=comment.post_id) }}">View post →</a>
+        <span>{{ comment.created_at[:10] if comment.created_at else '' }}</span>
+      </div>
+      <div class="comment-body">{{ comment.body[:280] }}{% if comment.body|length > 280 %}…{% endif %}</div>
+      <div class="post-actions-row compact">
+        <span class="reaction-button no-pointer">▲ {{ comment.score }}</span>
+      </div>
+    </div>
+    {% else %}
+    <div class="panel empty-state">
+      <h3>No comments yet</h3>
+      <p>Join a thread and share your take.</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- ── Settings tab ── -->
+  {% elif active_tab_name == 'settings' %}
+  <div class="panel profile-settings-card">
+    <h2>Profile Settings</h2>
+    <p class="helper-note">Update your display name, username, and profile image. Usernames are used for @mentions and notifications.</p>
+    <form method="post" action="{{ url_for('community.update_profile') }}" class="settings-form" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label for="display_name">Display name</label>
+      <input id="display_name" name="display_name" type="text" value="{{ profile_user.display_name or '' }}" placeholder="Your name" maxlength="60" required>
+      <label for="username">Username</label>
+      <input id="username" name="username" type="text" value="{{ profile_user.username or '' }}"
+             placeholder="your_username" minlength="3" maxlength="30"
+             pattern="[a-z0-9_]+" title="Only lowercase letters, numbers, and underscores" required>
+      <label for="profile_image">Profile image</label>
+      {% if profile_user.profile_image_url %}
+      <img class="settings-avatar-preview" src="{{ profile_user.profile_image_url }}" alt="Current profile image">
+      {% endif %}
+      <input id="profile_image" name="profile_image" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+      <button type="submit" class="primary-button profile-save-button">Save</button>
+    </form>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

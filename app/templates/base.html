@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Hockey Community{% endblock %}</title>
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='community.css') }}">
+</head>
+<body data-user-id="{{ auth_user.user_id if auth_user else '' }}">
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="{{ url_for('community.home') if auth_user else url_for('auth.login') }}">
+        <img class="brand-logo" src="{{ url_for('static', filename='logo.png') }}" alt="Hockey Skytte logo">
+        <span class="brand-copy">
+          <strong>
+            <span class="brand-title-line">Hockey</span>
+            <span class="brand-title-line">Community</span>
+          </strong>
+          <small>Fans, threads, and game-night noise.</small>
+        </span>
+      </a>
+      {% if auth_user %}
+      <button class="nav-hamburger" id="navToggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="site-nav site-nav-desktop">
+        <a class="{% if active_tab == 'home' %}active{% endif %}" href="{{ url_for('community.home') }}">Home</a>
+        <a class="{% if active_tab == 'hub:nhl' %}active{% endif %}" href="{{ url_for('community.hub_feed', hub_slug='nhl') }}">NHL</a>
+        <a class="{% if active_tab == 'hub:pwhl' %}active{% endif %}" href="{{ url_for('community.hub_feed', hub_slug='pwhl') }}">PWHL</a>
+        <a class="{% if active_tab == 'hub:hockey-analytics' %}active{% endif %}" href="{{ url_for('community.hub_feed', hub_slug='hockey-analytics') }}">Analytics</a>
+        <a class="{% if active_tab == 'notifications' %}active{% endif %}" href="{{ url_for('community.notifications_page') }}">Notifications{% if unread_notification_count %}<span class="pill-count">{{ unread_notification_count }}</span>{% endif %}</a>
+        {% if auth_user.is_admin %}<a class="{% if active_tab == 'admin-community-bans' %}active{% endif %}" href="{{ url_for('community.community_bans_page') }}">Admin</a>{% endif %}
+      </nav>
+      <div class="account-strip account-strip-desktop">
+        <a class="account-chip" href="{{ url_for('community.profile_page') }}">
+          {% if auth_user.profile_image_url %}
+          <img class="account-avatar" src="{{ auth_user.profile_image_url }}" alt="{{ auth_user.display_name or auth_user.username }} profile image">
+          {% endif %}
+          <span class="account-name">{{ auth_user.display_name or auth_user.username }}</span>
+          <span class="account-meta">@{{ auth_user.username or 'member' }}</span>
+        </a>
+        <form method="post" action="{{ url_for('auth.logout') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button type="submit" class="ghost-button">Logout</button>
+        </form>
+      </div>
+      <div class="mobile-menu-panel" id="mobileMenu" hidden>
+        <nav class="site-nav site-nav-mobile">
+          <a class="{% if active_tab == 'home' %}active{% endif %}" href="{{ url_for('community.home') }}">Home</a>
+          <a class="{% if active_tab == 'hub:nhl' %}active{% endif %}" href="{{ url_for('community.hub_feed', hub_slug='nhl') }}">NHL</a>
+          <a class="{% if active_tab == 'hub:pwhl' %}active{% endif %}" href="{{ url_for('community.hub_feed', hub_slug='pwhl') }}">PWHL</a>
+          <a class="{% if active_tab == 'hub:hockey-analytics' %}active{% endif %}" href="{{ url_for('community.hub_feed', hub_slug='hockey-analytics') }}">Analytics</a>
+          <a class="{% if active_tab == 'notifications' %}active{% endif %}" href="{{ url_for('community.notifications_page') }}">Notifications{% if unread_notification_count %}<span class="pill-count">{{ unread_notification_count }}</span>{% endif %}</a>
+          {% if auth_user.is_admin %}<a class="{% if active_tab == 'admin-community-bans' %}active{% endif %}" href="{{ url_for('community.community_bans_page') }}">Admin</a>{% endif %}
+          <a class="{% if active_tab == 'profile' %}active{% endif %}" href="{{ url_for('community.profile_page') }}">Profile</a>
+        </nav>
+        <div class="account-strip account-strip-mobile">
+          <a class="account-chip" href="{{ url_for('community.profile_page') }}">
+            {% if auth_user.profile_image_url %}
+            <img class="account-avatar" src="{{ auth_user.profile_image_url }}" alt="{{ auth_user.display_name or auth_user.username }} profile image">
+            {% endif %}
+            <span class="account-name">{{ auth_user.display_name or auth_user.username }}</span>
+            <span class="account-meta">@{{ auth_user.username or 'member' }}</span>
+          </a>
+          <form method="post" action="{{ url_for('auth.logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="ghost-button mobile-logout-button">Logout</button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <section class="flash-stack">
+        {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      </section>
+      {% endif %}
+    {% endwith %}
+
+    <main class="page-content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <script src="{{ url_for('static', filename='community.js') }}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

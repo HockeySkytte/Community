@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}New post · {{ hub.name }} | Hockey Community{% endblock %}
+
+{% block content %}
+<div class="create-post-layout">
+  <div class="panel composer-panel">
+    <div class="section-heading compact">
+      <div>
+        <p class="eyebrow"><a href="{{ url_for('community.hub_feed', hub_slug=hub.slug) }}">/{{ hub.slug }}</a></p>
+        <h1>New post</h1>
+      </div>
+      <a class="ghost-button" href="{{ url_for('community.hub_feed', hub_slug=hub.slug) }}">← Back to feed</a>
+    </div>
+
+    <form method="post" action="{{ url_for('community.create_post', hub_slug=hub.slug) }}" enctype="multipart/form-data" class="composer-form" data-rich-composer="1" data-draft-key="draft:{{ auth_user.user_id if auth_user else 'anon' }}:{{ hub.slug }}:new-post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="file" name="images" accept="image/png,image/jpeg,image/webp,image/gif" multiple class="visually-hidden" tabindex="-1" aria-hidden="true">
+
+      <label>
+        <span>Title</span>
+        <input type="text" name="title" maxlength="160" required placeholder="Start a thread worth clicking">
+      </label>
+
+      <label>
+        <span>Body</span>
+        <div class="composer-toolbar" data-composer-toolbar>
+          <button type="button" class="ghost-button" data-format="b">Bold</button>
+          <button type="button" class="ghost-button" data-format="i">Italic</button>
+          <button type="button" class="ghost-button" data-format="u">Underline</button>
+          <button type="button" class="ghost-button" data-format="size">Text size</button>
+          <button type="button" class="ghost-button" data-format="link">Hyperlink</button>
+        </div>
+        <div class="rich-editor" data-rich-editor contenteditable="true" data-editor-placeholder="Break down a signing, game, trend, or question.
+
+Paste images from your clipboard to embed them inline.
+      Put a YouTube, Vimeo, or Loom URL on its own line to auto-embed video."></div>
+        <textarea name="body" rows="12" class="visually-hidden" tabindex="-1" aria-hidden="true"></textarea>
+      </label>
+
+      <label>
+        <span>Thumbnail image <span class="helper-note">(shown on feed cards and top of post)</span></span>
+        <input type="file" name="thumbnail" accept="image/png,image/jpeg,image/webp,image/gif">
+      </label>
+
+      <div class="composer-actions">
+        <span class="helper-note" id="draftStatus"></span>
+        <div class="composer-action-buttons">
+          <button type="button" class="ghost-button" data-save-draft>Save draft</button>
+          <button type="button" class="ghost-button" data-review-post>Review post</button>
+          <button type="submit" class="primary-button">Publish post</button>
+        </div>
+      </div>
+
+      <section class="panel review-panel" data-review-panel hidden>
+        <div class="section-heading compact">
+          <div>
+            <p class="eyebrow">Preview</p>
+            <h2 data-review-title>Untitled post</h2>
+          </div>
+          <button type="button" class="ghost-button" data-close-review>Close preview</button>
+        </div>
+        <div class="detail-body rich-body" data-review-body>
+          <p class="helper-note">Fill in the Title and Body, then click Review post.</p>
+        </div>
+      </section>
+    </form>
+  </div>
+</div>
+{% endblock %}
