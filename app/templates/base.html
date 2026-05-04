@@ -13,12 +13,12 @@
   <meta property="og:site_name" content="Hockey Community">
   <meta property="og:title" content="Hockey Community">
   <meta property="og:description" content="Fan threads, game-night discussion, and hockey analytics for NHL, PWHL, and more.">
-  <meta property="og:image" content="{{ request.host_url }}static/Logo.png">
+  <meta property="og:image" content="{{ request.host_url }}static/logo.png">
   <meta property="og:url" content="{{ request.url }}">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Hockey Community">
   <meta name="twitter:description" content="Fan threads, game-night discussion, and hockey analytics for NHL, PWHL, and more.">
-  <meta name="twitter:image" content="{{ request.host_url }}static/Logo.png">
+  <meta name="twitter:image" content="{{ request.host_url }}static/logo.png">
   {% endblock %}
 
   <link rel="canonical" href="{{ request.url }}">
@@ -37,9 +37,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='Logo.png', v='20260503t') }}">
-  <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='Logo.png', v='20260503t') }}">
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='Logo.png', v='20260503t') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='logo.png', v='20260504a') }}">
+  <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='logo.png', v='20260504a') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png', v='20260504a') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='community.css', v='20260503t') }}">
 </head>
 <body data-user-id="{{ auth_user.user_id if auth_user else '' }}">

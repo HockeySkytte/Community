@@ -29,7 +29,7 @@ def create_app(test_config: dict | None = None) -> Flask:
 
     @app.get("/favicon.ico")
     def favicon():
-        return send_from_directory(app.static_folder or "", "Logo.png", mimetype="image/png")
+        return send_from_directory(app.static_folder or "", "logo.png", mimetype="image/png")
 
     @app.context_processor
     def inject_shell_state() -> dict:

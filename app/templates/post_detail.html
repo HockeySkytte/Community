@@ -77,11 +77,11 @@
 <meta property="og:title" content="{{ post.title }}">
 <meta property="og:description" content="{{ _desc[:200] }}">
 <meta property="og:url" content="{{ post.share_url }}">
-<meta property="og:image" content="{{ post.preview_image_url or (request.host_url ~ 'static/Logo.png') }}">
+<meta property="og:image" content="{{ post.preview_image_url or (request.host_url ~ 'static/logo.png') }}">
 <meta name="twitter:card" content="{{ 'summary_large_image' if post.preview_image_url else 'summary' }}">
 <meta name="twitter:title" content="{{ post.title }}">
 <meta name="twitter:description" content="{{ _desc[:200] }}">
-<meta name="twitter:image" content="{{ post.preview_image_url or (request.host_url ~ 'static/Logo.png') }}">
+<meta name="twitter:image" content="{{ post.preview_image_url or (request.host_url ~ 'static/logo.png') }}">
 {% endblock %}
 
 {% block content %}

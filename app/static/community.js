@@ -1229,7 +1229,7 @@ function wirePreviewBodySanitizer() {
 }
 
 function forceRuntimeFavicon() {
-  const href = '/static/Logo.png?v=20260503t';
+  const href = '/static/logo.png?v=20260504a';
   const ensureLink = (relValue) => {
     let link = document.head.querySelector(`link[rel="${relValue}"]`);
     if (!link) {
