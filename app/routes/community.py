@@ -463,6 +463,10 @@ def create_post(hub_slug: str):
         except ValueError as exc:
             flash(str(exc), "error")
             return redirect(url_for("community.new_post_page", hub_slug=hub_slug))
+    
+    # If no explicit thumbnail, use first uploaded image as thumbnail
+    if not thumbnail_url and media_rows:
+        thumbnail_url = str(media_rows[0].get("public_url") or "") or None
 
     post = sb.create_post(
         {
